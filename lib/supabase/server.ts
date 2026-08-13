@@ -12,20 +12,29 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
+
         setAll(
-          cookiesToSet: Array<{
+          cookiesToSet: {
             name: string;
             value: string;
-            options?: Parameters<typeof cookieStore.set>[2];
-          }>
-        ) { {
+            options?: {
+              domain?: string;
+              expires?: Date;
+              httpOnly?: boolean;
+              maxAge?: number;
+              path?: string;
+              sameSite?: "lax" | "strict" | "none";
+              secure?: boolean;
+            };
+          }[]
+        ) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           } catch {
-            // Called from a Server Component — safe to ignore if middleware
-            // handles session refresh.
+            // Called from a Server Component.
+            // Safe to ignore if middleware handles session refresh.
           }
         },
       },

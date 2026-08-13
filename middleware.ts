@@ -1,8 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,23 +17,34 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
+
+        setAll(
+          cookiesToSet: {
+            name: string;
+            value: string;
+            options?: {
+              domain?: string;
+              expires?: Date;
+              httpOnly?: boolean;
+              maxAge?: number;
+              path?: string;
+              sameSite?: "lax" | "strict" | "none";
+              secure?: boolean;
+            };
+          }[]
+        ) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
   );
 
-  // Refresh the auth session on every request
   await supabase.auth.getUser();
 
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {
