@@ -49,7 +49,7 @@ export default async function DashboardPage() {
           </p>
         ) : (
           <div className="mt-4 space-y-4">
-            {bookings.map((booking: any) => (
+            {bookings.map((booking) => (
               <div
                 key={booking.id}
                 className="rounded-lg border p-4"
